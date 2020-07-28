@@ -12,6 +12,7 @@ FetchContent_MakeAvailable(catch2)
 
 add_executable(Runner
     fizzbuzz.cpp
+    leap_years.cpp
     main.cpp
 )
 target_include_directories(Runner
