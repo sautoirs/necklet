@@ -80,3 +80,25 @@ SCENARIO("All years divisible by 4 but not by 100 are leap years", "[leap_years]
     }
 }
 
+SCENARIO("All years not divisible by 4 are not leap years", "[leap_years]") {
+    GIVEN("any positive year") {
+        WHEN("the year is 2017") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(2017) == false);
+	    }
+	}
+
+        WHEN("the year is 2018") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(2018) == false);
+	    }
+	}
+
+        WHEN("the year is 2019") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(2019) == false);
+	    }
+	}
+    }
+}
+
