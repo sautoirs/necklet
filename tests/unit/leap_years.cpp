@@ -30,3 +30,31 @@ SCENARIO("All years divisible by 400 are leap years", "[leap_years]") {
     }
 }
 
+SCENARIO("All years divisble by 100 but not by 400 are not leap years", "[leap_years]") {
+    GIVEN("any positive year") {
+        WHEN("the year is 1700") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(1700) == false);
+	    }
+	}
+
+        WHEN("the year is 1800") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(1800) == false);
+	    }
+	}
+
+        WHEN("the year is 1900") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(1900) == false);
+	    }
+	}
+
+        WHEN("the year is 2100") {
+            THEN("the function output is false") {
+                REQUIRE(is_leap_years(2100) == false);
+	    }
+	}
+    }
+}
+
