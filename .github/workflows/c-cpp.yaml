@@ -1,0 +1,26 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    container: sautoirs/rosary:latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: init
+      run: cmake -S . -B build -G Ninja
+    - name: configure
+      run: cmake build -DBUILD_TESTING=ON
+    - name: build
+      run: cmake --build build
+    - name: test
+      run: ./build/tests/unit/Runner
+
