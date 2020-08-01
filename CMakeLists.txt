@@ -5,6 +5,7 @@ project(Necklet)
 add_library(Necklet
     src/fizzbuzz.c
     src/leap_years.c
+    src/string_calculator.c
 )
 
 target_include_directories(Necklet
