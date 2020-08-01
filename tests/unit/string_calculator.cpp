@@ -54,3 +54,16 @@ SCENARIO("Allow the add method to handle newlines as separators", "[string_calcu
     }
 }
 
+SCENARIO("Don't allow the input to end in a separator", "[string_calculator]") {
+    char output[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    GIVEN("an input which end by a separator") {
+        WHEN("the input is \"1,2,\"") {
+            THEN("the function output is \"Number expected but EOF found.\"") {
+		std::string input = "1,2,";
+		add(input.c_str(), input.size(), output, sizeof(output) * sizeof(output[0])); 
+                REQUIRE(std::string(output) == "Number expected but EOF found.");
+	    }
+	}
+    }
+}
+
