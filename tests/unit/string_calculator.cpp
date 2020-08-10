@@ -67,3 +67,40 @@ SCENARIO("Don't allow the input to end in a separator", "[string_calculator]") {
     }
 }
 
+SCENARIO("Allow the add method to handle a different delimiter", "[string_calculator]") {
+    char output[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    GIVEN("an input with a custom delimiter") {
+        WHEN("the input is \"//;\\n1;2\"") {
+            THEN("the function output is 3") {
+		std::string input = "//;\n1;2";
+		add(input.c_str(), input.size(), output, sizeof(output) * sizeof(output[0])); 
+                REQUIRE(std::string(output) == "3");
+	    }
+	}
+
+        WHEN("the input is \"//|\\n1|2|3\"") {
+            THEN("the function output is 6") {
+		std::string input = "//|\n1|2|3";
+		add(input.c_str(), input.size(), output, sizeof(output) * sizeof(output[0])); 
+                REQUIRE(std::string(output) == "6");
+	    }
+	}
+
+        WHEN("the input is \"//sep\\n2sep3\"") {
+            THEN("the function output is 5") {
+		std::string input = "//sep\n2sep3";
+		add(input.c_str(), input.size(), output, sizeof(output) * sizeof(output[0])); 
+                REQUIRE(std::string(output) == "5");
+	    }
+	}
+
+        WHEN("the input is \"//|\\n1|2,3\"") {
+            THEN("the function output is \"'|' expected but ',' found at position 3.\"") {
+		std::string input = "//|\n1|2,3";
+		add(input.c_str(), input.size(), output, sizeof(output) * sizeof(output[0])); 
+                REQUIRE(std::string(output) == "'|' expected but ',' found at position 3.");
+	    }
+	}
+    }
+
+}
