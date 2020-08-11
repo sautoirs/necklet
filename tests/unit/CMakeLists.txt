@@ -15,6 +15,7 @@ add_executable(Runner
     leap_years.cpp
     string_calculator.cpp
     word_wrap.cpp
+    bowling.cpp
     main.cpp
 )
 target_include_directories(Runner

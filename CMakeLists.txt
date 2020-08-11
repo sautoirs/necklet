@@ -7,6 +7,7 @@ add_library(Necklet
     src/leap_years.c
     src/string_calculator.c
     src/word_wrap.c
+    src/bowling.c
 )
 
 target_include_directories(Necklet
