@@ -59,3 +59,17 @@ SCENARIO("Split the paragraph onto spaces if possible", "[word_wrap]") {
     }
 }
 
+SCENARIO("Split the paragraph inside a word if no space is available", "[word_wrap]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("A paragraph with a single long word and a small col") {
+        WHEN("the input is (\"aaabbbcc\", 3)") {
+            THEN("the function output is \"aaa\\nbbb\\ncc\"") {
+		std::string input = "aaabbbcc";
+		size_t written = word_wrap(input.c_str(), input.size(), &output[0], output.size(), 3); 
+		output.resize(written);
+                REQUIRE(output == "aaa\nbbb\ncc");
+	    }
+	}
+    }
+}
+
