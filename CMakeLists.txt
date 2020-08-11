@@ -6,6 +6,7 @@ add_library(Necklet
     src/fizzbuzz.c
     src/leap_years.c
     src/string_calculator.c
+    src/word_wrap.c
 )
 
 target_include_directories(Necklet

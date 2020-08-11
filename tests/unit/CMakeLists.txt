@@ -14,6 +14,7 @@ add_executable(Runner
     fizzbuzz.cpp
     leap_years.cpp
     string_calculator.cpp
+    word_wrap.cpp
     main.cpp
 )
 target_include_directories(Runner
