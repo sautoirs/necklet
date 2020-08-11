@@ -5,6 +5,8 @@
 uint32_t count_score(const char *input, size_t size)
 {
     uint32_t sum = 0;
+    uint32_t double_ = 0;
+    uint32_t current = 0;
     for (size_t i = 0; i < size; i++) {
         switch (input[i]) {
         case '1':
@@ -16,13 +18,28 @@ uint32_t count_score(const char *input, size_t size)
         case '7':
         case '8':
         case '9':
-	    sum += input[i] - '0'; 
+	    if (double_ > 0) {
+		current += (input[i] - '0') * 2;
+		double_ -= 1;
+	    } else {
+	        current += input[i] - '0'; 
+	    }
+	    break;
+	case '-':
+	    if (double_ > 0) {
+                double_ -= 1;
+	    }
 	    break;
 	case ' ':
+            sum += current;
+	    current = 0;
 	    break;
+	case '/':
+	    current = 10; 
+	    double_ = 1;
 	default:
 	    break;
 	}
     }
-    return sum;
+    return sum + current;
 }

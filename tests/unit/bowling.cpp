@@ -32,3 +32,31 @@ SCENARIO("Return the sum of the frames if in none of them the player knocked all
     }
 }
 
+SCENARIO("If in two tries he knocks them all down, his score for the frame is ten plus the number of pins knocked down on his next throw", "[bowling]") {
+    GIVEN("A bownling line with a spare") {
+        WHEN("the input is \"5/ 11\"") {
+            THEN("the function output is 13") {
+		std::string input = "5/ 11";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 13);
+	    }
+	}
+
+        WHEN("the input is \"-/ 11\"") {
+            THEN("the function output is 13") {
+		std::string input = "-/ 11";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 13);
+	    }
+	}
+
+        WHEN("the input is \"-/ --\"") {
+            THEN("the function output is 11") {
+		std::string input = "-/ -1";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 11);
+	    }
+	}
+    }
+}
+
