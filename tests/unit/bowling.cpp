@@ -5,7 +5,7 @@
 #include <bowling.c>
 
 SCENARIO("Return the sum of the frames if in none of them the player knocked all the pins down", "[bowling]") {
-    GIVEN("A bownling line with no spare nor strike") {
+    GIVEN("A bowling line with no spare nor strike") {
         WHEN("the input is \"\"") {
             THEN("the function output is 0") {
 		std::string input = "";
@@ -33,7 +33,7 @@ SCENARIO("Return the sum of the frames if in none of them the player knocked all
 }
 
 SCENARIO("If in two tries he knocks them all down, his score for the frame is ten plus the number of pins knocked down on his next throw", "[bowling]") {
-    GIVEN("A bownling line with a spare") {
+    GIVEN("A bowling line with a spare") {
         WHEN("the input is \"5/ 11\"") {
             THEN("the function output is 13") {
 		std::string input = "5/ 11";
@@ -61,7 +61,7 @@ SCENARIO("If in two tries he knocks them all down, his score for the frame is te
 }
 
 SCENARIO("If on his first try in the frame he knocks down all the pins, his turn is over and his score for the frame is ten plus the simple total of the pins knocked down in his next two rolls", "[bowling]") {
-    GIVEN("A bownling line with a strike") {
+    GIVEN("A bowling line with a strike") {
         WHEN("the input is \"X 11 11\"") {
             THEN("the function output is 16") {
 		std::string input = "X 11 11";
