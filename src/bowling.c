@@ -37,6 +37,11 @@ uint32_t count_score(const char *input, size_t size)
 	case '/':
 	    current = 10; 
 	    double_ = 1;
+	    break;
+	case 'X':
+	    current = 10; 
+	    double_ = 2;
+	    break;
 	default:
 	    break;
 	}

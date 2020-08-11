@@ -60,3 +60,23 @@ SCENARIO("If in two tries he knocks them all down, his score for the frame is te
     }
 }
 
+SCENARIO("If on his first try in the frame he knocks down all the pins, his turn is over and his score for the frame is ten plus the simple total of the pins knocked down in his next two rolls", "[bowling]") {
+    GIVEN("A bownling line with a strike") {
+        WHEN("the input is \"X 11 11\"") {
+            THEN("the function output is 16") {
+		std::string input = "X 11 11";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 16);
+	    }
+	}
+	
+        WHEN("the input is \"X -- 11\"") {
+            THEN("the function output is 12") {
+		std::string input = "X -- 11";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 12);
+	    }
+	}
+    }
+}
+
