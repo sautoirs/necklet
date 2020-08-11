@@ -8,7 +8,7 @@ SCENARIO("Split the paragraph into lines of less or equal than `col` characters"
     std::string output = std::string(128, 'a');
     GIVEN("A paragraph written on a single line and a number of column matching spaces") {
         WHEN("the input is (\"aa bb cc dd\", 3)") {
-            THEN("the function output is \"aa \\nbb \\ncc \\ndd \"") {
+            THEN("the function output is \"aa \\nbb \\ncc \\ndd\"") {
 		std::string input = "aa bb cc dd";
 		size_t written = word_wrap(input.c_str(), input.size(), &output[0], output.size(), 3); 
 		output.resize(written);
@@ -31,6 +31,29 @@ SCENARIO("Split the paragraph into lines of less or equal than `col` characters"
 		size_t written = word_wrap(input.c_str(), input.size(), &output[0], output.size(), 3); 
 		output.resize(written);
                 REQUIRE(output == "aa");
+	    }
+	}
+    }
+}
+
+SCENARIO("Split the paragraph onto spaces if possible", "[word_wrap]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("A paragraph with spaces which does not match the col") {
+        WHEN("the input is (\"aaa bb cc dd\", 6)") {
+            THEN("the function output is \"aaa \\nbb cc \\ndd\"") {
+		std::string input = "aaa bb cc dd";
+		size_t written = word_wrap(input.c_str(), input.size(), &output[0], output.size(), 6); 
+		output.resize(written);
+                REQUIRE(output == "aaa \nbb cc \ndd");
+	    }
+	}
+
+        WHEN("the input is (\"a b cccc ddd\", 6)") {
+            THEN("the function output is \"a b \\ncccc \\nddd\"") {
+		std::string input = "a b cccc ddd";
+		size_t written = word_wrap(input.c_str(), input.size(), &output[0], output.size(), 6); 
+		output.resize(written);
+                REQUIRE(output == "a b \ncccc \nddd");
 	    }
 	}
     }

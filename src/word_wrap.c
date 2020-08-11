@@ -36,7 +36,14 @@ const char *next_line(const char *buffer, size_t size, uint32_t col)
     if (col > size) {
         return NULL;
     }
-    return buffer + col;
+    size_t split = col;
+    for (size_t i = 0; i < col; i++) {
+        if (buffer[col - i - 1] == ' ') {
+            split = col - i;
+	    break;
+	}
+    }
+    return buffer + split;
 }
 
 size_t append(char *output, const char *buffer, size_t size)
