@@ -105,6 +105,30 @@ SCENARIO("If he gets a spare or strike in the last frame, the bowler gets to thr
                 REQUIRE(score == 52);
 	    }
 	}
+
+        WHEN("the input is \"X X X X X X X X X X X X\"") {
+            THEN("the function output is 52") {
+                std::string input = "X X X X X X X X X X X X";
+                uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 300);
+            }
+        }
+
+        WHEN("the input is \"9- 9- 9- 9- 9- 9- 9- 9- 9- 9-\"") {
+            THEN("the function output is 52") {
+                std::string input = "9- 9- 9- 9- 9- 9- 9- 9- 9- 9-";
+                uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 90);
+            }
+        }
+
+        WHEN("the input is \"5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/5\"") {
+            THEN("the function output is 52") {
+                std::string input = "5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/ 5/5";
+                uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 150);
+            }
+        }
     }
 }
 
