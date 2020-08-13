@@ -80,3 +80,31 @@ SCENARIO("If on his first try in the frame he knocks down all the pins, his turn
     }
 }
 
+SCENARIO("If he gets a spare or strike in the last frame, the bowler gets to throw one or two more bonus balls. These bonus throws are taken as part of the same turn. If the bonus throws knock down all the pins, the process does not repeat: the bonus throws are only used to calculate the score of the final frame", "[bowling]") {
+    GIVEN("A bowling line with a strike or a spare in the last frame") {
+        WHEN("the input is \"-- -- -- -- -- -- -- -- X X X X\"") {
+            THEN("the function output is 60") {
+		std::string input = "-- -- -- -- -- -- -- -- X X X X";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 60);
+	    }
+	}
+	
+        WHEN("the input is \"-- -- -- -- -- -- -- -- -/ 1/ X\"") {
+            THEN("the function output is 31") {
+		std::string input = "-- -- -- -- -- -- -- -- -/ 1/ X";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 31);
+	    }
+	}
+
+        WHEN("the input is \"-- -- -- -- -- -- -- -- X X X 2\"") {
+            THEN("the function output is 52") {
+		std::string input = "-- -- -- -- -- -- -- -- X X X 2";
+		uint32_t score = count_score(input.c_str(), input.size());
+                REQUIRE(score == 52);
+	    }
+	}
+    }
+}
+
