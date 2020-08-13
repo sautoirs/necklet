@@ -64,3 +64,56 @@ SCENARIO("Basic numbers are represented with a single letter", "[roman_numerals]
         }
     }
 }
+
+SCENARIO("A numbers slightly bigger than a basic number is completed with a smaller basic number appended to the first one", "[roman_numerals]") {
+    GIVEN("An arabic number which is slightly bigger than a basic number") {
+        std::string output = std::string(128, 'a');
+        WHEN("the input is 2") {
+            THEN("the function output is \"II\"") {
+                size_t written = to_roman(&output[0], output.size(), 2);
+                output.resize(written);
+                REQUIRE(output == "II");
+            }
+        }
+
+        WHEN("the input is 6") {
+            THEN("the function output is \"VI\"") {
+                size_t written = to_roman(&output[0], output.size(), 6);
+                output.resize(written);
+                REQUIRE(output == "VI");
+            }
+        }
+
+        WHEN("the input is 7") {
+            THEN("the function output is \"VII\"") {
+                size_t written = to_roman(&output[0], output.size(), 7);
+                output.resize(written);
+                REQUIRE(output == "VII");
+            }
+        }
+
+        WHEN("the input is 8") {
+            THEN("the function output is \"VIII\"") {
+                size_t written = to_roman(&output[0], output.size(), 8);
+                output.resize(written);
+                REQUIRE(output == "VIII");
+            }
+        }
+
+        WHEN("the input is 16") {
+            THEN("the function output is \"XVI\"") {
+                size_t written = to_roman(&output[0], output.size(), 16);
+                output.resize(written);
+                REQUIRE(output == "XVI");
+            }
+        }
+
+        WHEN("the input is 26") {
+            THEN("the function output is \"XXVI\"") {
+                size_t written = to_roman(&output[0], output.size(), 26);
+                output.resize(written);
+                REQUIRE(output == "XXVI");
+            }
+        }
+    }
+}

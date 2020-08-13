@@ -1,15 +1,14 @@
 #include <necklet/roman_numerals.h>
 
 #include <stdbool.h>
-#include <stdio.h>
 
 struct number {
     uint32_t arabic;
     char roman;
 };
 
-bool is_basic(uint32_t arabic);
-char get_basic(uint32_t arabic);
+const struct number *get_closest_basic(uint32_t arabic);
+bool in_range(const struct number *self, uint32_t arabic);
 
 const struct number BASICS[] = {
     {1, 'I'},
@@ -24,33 +23,33 @@ const struct number BASICS[] = {
 size_t to_roman(char *output, size_t size, uint32_t arabic)
 {
     size_t written = 0;
-    if (is_basic(arabic)) {
-        char roman = get_basic(arabic);
-        snprintf(output, size, "%c", roman);
+    int32_t remaining = arabic;
+    do {
+        const struct number *basic = get_closest_basic(remaining);
+        output[written] = basic->roman;
         written += 1;
-    }
+        remaining -= basic->arabic;
+    } while (remaining > 0);
     return written;
 }
 
-bool is_basic(uint32_t arabic)
+const struct number *get_closest_basic(uint32_t arabic)
 {
-    for (size_t i = 0; i < sizeof(BASICS) / sizeof(BASICS[0]); i++) {
+    for (size_t i = sizeof(BASICS) / sizeof(BASICS[0]); i >= 0; i--) {
         const struct number *basic = &BASICS[i];
-        if (basic->arabic == arabic) {
-            return true;
+        if (in_range(basic, arabic)) {
+            return basic;
         }
     }
-    return false;
+    return NULL;
 }
 
-char get_basic(uint32_t arabic)
+bool in_range(const struct number *self, uint32_t arabic)
 {
-    for (size_t i = 0; i < sizeof(BASICS) / sizeof(BASICS[0]); i++) {
-        const struct number *basic = &BASICS[i];
-        if (basic->arabic == arabic) {
-            return basic->roman;
-        }
+    if (self->arabic <= arabic) {
+        return true;
+    } else {
+        return false;
     }
-    return '!';
 }
 
