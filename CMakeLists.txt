@@ -8,6 +8,7 @@ add_library(Necklet
     src/string_calculator.c
     src/word_wrap.c
     src/bowling.c
+    src/roman_numerals.c
 )
 
 target_include_directories(Necklet

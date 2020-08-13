@@ -16,6 +16,7 @@ add_executable(Runner
     string_calculator.cpp
     word_wrap.cpp
     bowling.cpp
+    roman_numerals.cpp
     main.cpp
 )
 target_include_directories(Runner
