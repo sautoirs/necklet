@@ -117,3 +117,40 @@ SCENARIO("A numbers slightly bigger than a basic number is completed with a smal
         }
     }
 }
+
+SCENARIO("A numbers slightly smaller than a basic number is completed with a smaller basic number prepended to the first one", "[roman_numerals]") {
+    GIVEN("An arabic number which is slightly smaller than a basic number") {
+        std::string output = std::string(128, 'a');
+        WHEN("the input is 4") {
+            THEN("the function output is \"IV\"") {
+                size_t written = to_roman(&output[0], output.size(), 4);
+                output.resize(written);
+                REQUIRE(output == "IV");
+            }
+        }
+
+        WHEN("the input is 9") {
+            THEN("the function output is \"IX\"") {
+                size_t written = to_roman(&output[0], output.size(), 9);
+                output.resize(written);
+                REQUIRE(output == "IX");
+            }
+        }
+
+        WHEN("the input is 19") {
+            THEN("the function output is \"XIX\"") {
+                size_t written = to_roman(&output[0], output.size(), 19);
+                output.resize(written);
+                REQUIRE(output == "XIX");
+            }
+        }
+
+        WHEN("the input is 24") {
+            THEN("the function output is \"XXIV\"") {
+                size_t written = to_roman(&output[0], output.size(), 24);
+                output.resize(written);
+                REQUIRE(output == "XXIV");
+            }
+        }
+    }
+}
