@@ -10,9 +10,10 @@ struct number {
     char roman[5];
 };
 
-const struct number get_closest_digit(uint32_t arabic);
-void generate_basic_combination(char *output, uint32_t unit, size_t i);
-uint32_t get_next_roman_number(const char **next, size_t size);
+static const struct number get_closest_digit(uint32_t arabic);
+static void generate_basic_combination(char *output, uint32_t unit, size_t i);
+static uint32_t get_next_roman_number(const char **next, size_t size);
+static uint32_t get_digit(const char **next, size_t i);
 
 const struct number BASICS[] = {
     {1, "I"},
@@ -28,12 +29,12 @@ size_t to_roman(char *output, size_t size, uint32_t arabic)
 {
     size_t written = 0;
     int32_t remaining = arabic;
-    do {
+    while (remaining > 0) {
         const struct number digit = get_closest_digit(remaining);
         strcpy(&output[written], digit.roman);
         written += strlen(digit.roman);
         remaining -= digit.arabic;
-    } while (remaining > 0);
+    };
     return written;
 }
 
@@ -53,7 +54,7 @@ uint32_t to_arabic(const char *input, size_t size)
     return arabic;
 }
 
-const struct number get_closest_digit(uint32_t arabic)
+static const struct number get_closest_digit(uint32_t arabic)
 {
     struct number number = {0, ""};
     size_t basic_size = sizeof(BASICS) / sizeof(BASICS[0]);
@@ -70,7 +71,7 @@ const struct number get_closest_digit(uint32_t arabic)
     return number;
 }
 
-void generate_basic_combination(char *output, uint32_t unit, size_t i)
+static void generate_basic_combination(char *output, uint32_t unit, size_t i)
 {
     char one = BASICS[i].roman[0];
     char five = BASICS[i + 1].roman[0];
@@ -106,56 +107,63 @@ void generate_basic_combination(char *output, uint32_t unit, size_t i)
     }
 }
 
-uint32_t get_next_roman_number(const char **next, size_t size)
+static uint32_t get_next_roman_number(const char **next, size_t size)
 {
     uint32_t arabic = 0;
     for (size_t i = 0; i < sizeof(BASICS) / sizeof(BASICS[0]); i += 2) {
-        char one = BASICS[i].roman[0];
-        char five = BASICS[i + 1].roman[0];
-        char ten = BASICS[i + 2].roman[0];
-        uint32_t digit = 0;
+        uint32_t digit = get_digit(next, i);
+        if (digit > 0) {
+            arabic = digit * pow(10, i / 2);
+            break;
+        }
+    }
+    return arabic;
+}
+
+static uint32_t get_digit(const char **next, size_t i)
+{
+    uint32_t digit = 0;
+    char one = BASICS[i].roman[0];
+    char five = BASICS[i + 1].roman[0];
+    char ten = BASICS[i + 2].roman[0];
+    if (**next == one) {
+        *next += 1;
+        if (**next == one) {
+            *next += 1;
+            if (**next == one) {
+                *next += 1;
+                digit = 3;
+            } else {
+                digit = 2;
+            }
+        } else if (**next == five) {
+            *next += 1;
+            digit = 4;
+        } else if (**next == ten) {
+            *next += 1;
+            digit = 9;
+        } else {
+            digit = 1;
+        }
+    } else if (**next == five) {
+        *next += 1;
         if (**next == one) {
             *next += 1;
             if (**next == one) {
                 *next += 1;
                 if (**next == one) {
                     *next += 1;
-                    digit = 3;
+                    digit = 8;
                 } else {
-                    digit = 2;
-                }
-            } else if (**next == five) {
-                *next += 1;
-                digit = 4;
-            } else if (**next == ten) {
-                *next += 1;
-                digit = 9;
-            } else {
-                digit = 1;
-            }
-        } else if (**next == five) {
-            *next += 1;
-            if (**next == one) {
-                *next += 1;
-                if (**next == one) {
-                    *next += 1;
-                    if (**next == one) {
-                        *next += 1;
-                        digit = 8;
-                    } else {
-                        digit = 7;
-                    }
-                } else {
-                    digit = 6;
+                    digit = 7;
                 }
             } else {
-                digit = 5;
+                digit = 6;
             }
-        }
-        arabic = digit * pow(10, i / 2);
-        if (arabic > 0) {
-            break;
+        } else {
+            digit = 5;
         }
     }
-    return arabic;
+    return digit;
 }
+
