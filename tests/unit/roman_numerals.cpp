@@ -63,6 +63,64 @@ SCENARIO("Basic numbers are represented with a single letter", "[roman_numerals]
             }
         }
     }
+
+    GIVEN("A roman number which has a basic roman representation") {
+        WHEN("the input is \"I\"") {
+            THEN("the function output is 1") {
+                std::string input = "I";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 1);
+            }
+        }
+
+        WHEN("the input is \"V\"") {
+            THEN("the function output is 5") {
+                std::string input = "V";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 5);
+            }
+        }
+
+        WHEN("the input is \"X\"") {
+            THEN("the function output is 10") {
+                std::string input = "X";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 10);
+            }
+        }
+
+        WHEN("the input is \"L\"") {
+            THEN("the function output is 50") {
+                std::string input = "L";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 50);
+            }
+        }
+
+        WHEN("the input is \"C\"") {
+            THEN("the function output is 100") {
+                std::string input = "C";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 100);
+            }
+        }
+
+        WHEN("the input is \"D\"") {
+            THEN("the function output is 500") {
+                std::string input = "D";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 500);
+            }
+        }
+
+        WHEN("the input is \"M\"") {
+            THEN("the function output is 1000") {
+                std::string input = "M";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 1000);
+            }
+        }
+    }
 }
 
 SCENARIO("A numbers slightly bigger than a basic number is completed with a smaller basic number appended to the first one", "[roman_numerals]") {
@@ -115,6 +173,72 @@ SCENARIO("A numbers slightly bigger than a basic number is completed with a smal
                 REQUIRE(output == "XXVI");
             }
         }
+
+        WHEN("the input is 448") {
+            THEN("the function output is \"CDXLVIII\"") {
+                size_t written = to_roman(&output[0], output.size(), 448);
+                output.resize(written);
+                REQUIRE(output == "CDXLVIII");
+            }
+        }
+    }
+
+    GIVEN("A roman number which is slightly bigger than a basic") {
+        WHEN("the input is \"II\"") {
+            THEN("the function output is 2") {
+                std::string input = "II";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 2);
+            }
+        }
+
+        WHEN("the input is \"III\"") {
+            THEN("the function output is 3") {
+                std::string input = "III";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 3);
+            }
+        }
+
+        WHEN("the input is \"VI\"") {
+            THEN("the function output is 6") {
+                std::string input = "VI";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 6);
+            }
+        }
+
+        WHEN("the input is \"VII\"") {
+            THEN("the function output is 7") {
+                std::string input = "VII";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 7);
+            }
+        }
+
+        WHEN("the input is \"VIII\"") {
+            THEN("the function output is 8") {
+                std::string input = "VIII";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 8);
+            }
+        }
+
+        WHEN("the input is \"XVIII\"") {
+            THEN("the function output is 18") {
+                std::string input = "XVIII";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 18);
+            }
+        }
+
+        WHEN("the input is \"CDXLVIII\"") {
+            THEN("the function output is 448") {
+                std::string input = "CDXLVIII";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 448);
+            }
+        }
     }
 }
 
@@ -152,5 +276,40 @@ SCENARIO("A numbers slightly smaller than a basic number is completed with a sma
                 REQUIRE(output == "XXIV");
             }
         }
+
+        WHEN("the input is 1998") {
+            THEN("the function output is \"MCMXCVIII\"") {
+                size_t written = to_roman(&output[0], output.size(), 1998);
+                output.resize(written);
+                REQUIRE(output == "MCMXCVIII");
+            }
+        }
+    }
+
+    GIVEN("A roman number which is slightly smaller than a basic") {
+        WHEN("the input is \"IV\"") {
+            THEN("the function output is 4") {
+                std::string input = "IV";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 4);
+            }
+        }
+
+        WHEN("the input is \"IX\"") {
+            THEN("the function output is 9") {
+                std::string input = "IX";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 9);
+            }
+        }
+
+        WHEN("the input is \"MCMXCVIII\"") {
+            THEN("the function output is 1998") {
+                std::string input = "MCMXCVIII";
+                uint32_t arabic = to_arabic(input.c_str(), input.size());
+                REQUIRE(arabic == 1998);
+            }
+        }
     }
 }
+
