@@ -17,6 +17,7 @@ add_executable(Runner
     word_wrap.cpp
     bowling.cpp
     roman_numerals.cpp
+    markov_chain.cpp
     main.cpp
 )
 target_include_directories(Runner

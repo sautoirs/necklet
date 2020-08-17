@@ -9,6 +9,7 @@ add_library(Necklet
     src/word_wrap.c
     src/bowling.c
     src/roman_numerals.c
+    src/markov_chain.c
 )
 
 target_include_directories(Necklet
