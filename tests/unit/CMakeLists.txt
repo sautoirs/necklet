@@ -18,6 +18,7 @@ add_executable(Runner
     bowling.cpp
     roman_numerals.cpp
     markov_chain.cpp
+    poker_hands.cpp
     main.cpp
 )
 target_include_directories(Runner

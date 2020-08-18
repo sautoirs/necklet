@@ -10,6 +10,7 @@ add_library(Necklet
     src/bowling.c
     src/roman_numerals.c
     src/markov_chain.c
+    src/poker_hands.c
 )
 
 target_include_directories(Necklet
