@@ -4,20 +4,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-enum Player {
+enum PlayerId {
     PLAYER_1,
     PLAYER_2,
 };
 
-struct PokerHand;
+struct Player;
 
-/// Initialize a poker hand from a given player name and a deck of cards.
+/// Initialize a poker player from a given name and a deck of cards.
 /// 
-/// e.g. PokerHand_Init("Black", "2H 3D 5S 9C KD");
-struct PokerHand *PokerHand_Init(enum Player player, const char *name, const char *deck);
+/// e.g. Player_Init("Black", "2H 3D 5S 9C KD");
+struct Player *Player_Init(enum PlayerId player_id, const char *name, const char *deck);
 
-/// Compare two poker hands and write the result in the given buffer.
-size_t PokerHand_PrettyCompare(const struct PokerHand *self, const struct PokerHand *other, char *output, size_t size);
+/// Compare two player hands and write the result in the given buffer.
+size_t Player_PrettyCompare(const struct Player *self, const struct Player *other, char *output, size_t size);
 
 #endif
 
