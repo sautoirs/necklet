@@ -57,6 +57,7 @@ struct StringBuffer {
 enum PokerHandType {
     NO_HAND,
     HIGH_CARD,
+    PAIR,
     HIGHEST_HAND,
 };
 
@@ -72,8 +73,11 @@ struct PokerHand {
     const struct PokerHandMethods *vtable;
     union {
         struct {
-            const struct Card *card;
+            struct Card card;
         } HighCard;
+        struct {
+            struct Card card;
+        } Pair;
     } value;
 };
 
@@ -85,10 +89,13 @@ static void StringBuffer_Init(struct StringBuffer *self, char *buffer, size_t si
 static void StringBuffer_Write(struct StringBuffer *self, const char *format, ...);
 static size_t StringBuffer_GetWritten(const struct StringBuffer *self);
 static void CardDeck_Init(struct CardDeck *self, const char *deck);
+static void CardDeck_Copy(struct CardDeck *self, const struct CardDeck *other);
 static int CardDeck_Compare(const struct CardDeck *self, const struct CardDeck *other, struct PokerHand *hand);
 static struct PokerHand CardDeck_GetHighestPokerHand(const struct CardDeck *self);
 static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardDeck *self, const struct PokerHand *limit);
+static void CardDeck_Sort(struct CardDeck *self);
 static void Card_Init(struct Card *self, enum Value value, enum Suit suit);
+static void Card_Copy(struct Card *self, const struct Card *other);
 static void Card_FromString(struct Card *self, const char *string);
 static int Card_Compare(const struct Card *self, const struct Card *other);
 static enum Value Card_GetValue(const struct Card *self);
@@ -102,6 +109,10 @@ static void HighCard_FromCardsLowerThan(struct PokerHand *self, const struct Car
 static int HighCard_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighCard_GetType(const struct PokerHand *self);
 static void HighCard_ToString(const struct PokerHand *self, char *output);
+static void Pair_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static int Pair_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType Pair_GetType(const struct PokerHand *self);
+static void Pair_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -145,7 +156,7 @@ static void error(const char *file, const char *function, size_t line, const cha
     va_start(args, format);
     fprintf(stderr, "Error: '");
     vfprintf(stderr, format, args);
-    fprintf(stderr, "' inside %s() in %s:%lu\n", function, file, line);
+    fprintf(stderr, "' in %s() from %s:%lu\n", function, file, line);
     va_end(args);
     exit(1);
 }
@@ -306,6 +317,13 @@ static void CardDeck_Init(struct CardDeck *self, const char *deck)
     }
 }
 
+static void CardDeck_Copy(struct CardDeck *self, const struct CardDeck *other)
+{
+    for (size_t i = 0; i < sizeof(self->cards) / sizeof(self->cards[0]); i++) {
+        Card_Copy(&self->cards[i], &other->cards[i]);
+    }
+}
+
 static int CardDeck_Compare(const struct CardDeck *self, const struct CardDeck *other, struct PokerHand *hand)
 {
     struct PokerHand selfHand = CardDeck_GetHighestPokerHand(self);
@@ -338,18 +356,48 @@ static struct PokerHand CardDeck_GetHighestPokerHand(const struct CardDeck *self
 
 static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardDeck *self, const struct PokerHand *limit)
 {
+    struct CardDeck copy;
+    CardDeck_Copy(&copy, self);
+    CardDeck_Sort(&copy);
     struct PokerHand hand;
-    HighCard_FromCardsLowerThan(&hand, self->cards, limit);
-    if (hand.vtable->GetType(&hand) != NO_HAND && hand.vtable->Compare(&hand, limit) < 0) {
+    Pair_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
+    HighCard_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
     }
     return hand;
+}
+
+static void CardDeck_Sort(struct CardDeck *self)
+{
+    size_t size = sizeof(self->cards) / sizeof(self->cards[0]);
+    for (size_t i = 0; i < size - 1; i++) {
+        for (size_t j = 0; j < size - i - 1; j++) {
+            struct Card *lhs = &self->cards[j];
+            struct Card *rhs = &self->cards[j + 1];
+            if (Card_Compare(lhs, rhs) < 0) {
+                struct Card temp;
+                Card_Copy(&temp, lhs);
+                Card_Copy(lhs, rhs);
+                Card_Copy(rhs, &temp);
+            }
+        }
+    }
 }
 
 static void Card_Init(struct Card *self, enum Value value, enum Suit suit)
 {
     self->value = value;
     self->suit = suit;
+}
+
+static void Card_Copy(struct Card *self, const struct Card *other)
+{
+    self->value = other->value;
+    self->suit = other->suit;
 }
 
 static void Card_FromString(struct Card *self, const char *string)
@@ -425,17 +473,17 @@ static void HighCard_FromCardsLowerThan(struct PokerHand *self, const struct Car
     }
     const struct Card *card = NULL;
     for (size_t i = 0; i < NUMBER_OF_CARDS; i++) {
-        if (sign < 0 || Card_Compare(&cards[i], limit->value.HighCard.card) < 0) {
-            if (card == NULL || Card_Compare(&cards[i], card) > 0) {
-                card = &cards[i];
-            }
+        if (sign == 0 && Card_Compare(&cards[i], &limit->value.HighCard.card) >= 0) {
+            continue;
         }
+        card = &cards[i];
+        break;
     }
     if (card == NULL) {
         NoHand_Default(self);
         return;
     }
-    self->value.HighCard.card = card;
+    Card_Copy(&self->value.HighCard.card, card);
 }
 
 static int HighCard_Compare(const struct PokerHand *self, const struct PokerHand *other)
@@ -444,7 +492,7 @@ static int HighCard_Compare(const struct PokerHand *self, const struct PokerHand
     if (sign != 0) {
         return sign;
     }
-    return Card_Compare(self->value.HighCard.card, other->value.HighCard.card);
+    return Card_Compare(&self->value.HighCard.card, &other->value.HighCard.card);
 }
 
 static enum PokerHandType HighCard_GetType(const struct PokerHand *self)
@@ -455,8 +503,59 @@ static enum PokerHandType HighCard_GetType(const struct PokerHand *self)
 static void HighCard_ToString(const struct PokerHand *self, char *output)
 {
     char value[16];
-    Value_ToString(Card_GetValue(self->value.HighCard.card), value);
+    Value_ToString(Card_GetValue(&self->value.HighCard.card), value);
     sprintf(output, "high card: %s", value);
+}
+
+static void Pair_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &Pair_Compare,
+        .GetType = &Pair_GetType,
+        .ToString = &Pair_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = NULL;
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 1; i++) {
+        if (sign == 0 && Card_Compare(&cards[i], &limit->value.Pair.card) >= 0) {
+            continue;
+        }
+        if (Card_Compare(&cards[i], &cards[i + 1]) == 0) {
+            card = &cards[i];
+            break;
+        }
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.Pair.card, card);
+}
+
+static int Pair_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.Pair.card, &other->value.Pair.card);
+}
+
+static enum PokerHandType Pair_GetType(const struct PokerHand *self)
+{
+    return PAIR;
+}
+
+static void Pair_ToString(const struct PokerHand *self, char *output)
+{
+    char value[16];
+    Value_ToString(Card_GetValue(&self->value.Pair.card), value);
+    sprintf(output, "pair: %s", value);
 }
 
 static void HighestHand_Default(struct PokerHand *self)

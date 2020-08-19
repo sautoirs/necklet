@@ -28,3 +28,39 @@ SCENARIO("High Card: Hands which do not fit any higher category are ranked by th
         }
     }
 }
+
+SCENARIO("Pair: 2 of the 5 cards in the hand have the same value. Hands which both contain a pair are ranked by the value of the cards forming the pair. If these values are the same, the hands are ranked by the values of the cards not forming the pair, in decreasing order.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a pair") {
+        WHEN("the cards are \"Black: 2H 3D KS 9C KD  White: 2C 3H AC 8C AH\"") {
+            THEN("the output is \"White wins. - with pair: Ace\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D KS 9C KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H AC 8C AH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with pair: Ace");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3D KS 9C KD  White: 2C 3H KC 8C KH\"") {
+            THEN("the output is \"Black wins. - with high card: 9\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D KS 9C KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H KC 8C KH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with high card: 9");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3D KS 9C KD  White: 2C 3H 4C 8C AH\"") {
+            THEN("the output is \"Black wins. - with high card: 9\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D KS 9C KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H 4C 8C AH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with pair: King");
+            }
+        }
+    }
+}
+
