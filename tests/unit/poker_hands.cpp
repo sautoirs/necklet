@@ -53,7 +53,7 @@ SCENARIO("Pair: 2 of the 5 cards in the hand have the same value. Hands which bo
         }
 
         WHEN("the cards are \"Black: 2H 3D KS 9C KD  White: 2C 3H 4C 8C AH\"") {
-            THEN("the output is \"Black wins. - with high card: 9\"") {
+            THEN("the output is \"Black wins. - with pair: King\"") {
                 struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D KS 9C KD");
                 struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H 4C 8C AH");
                 size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
@@ -84,6 +84,26 @@ SCENARIO("Two Pairs: The hand contains 2 different pairs. Hands which both conta
                 size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
                 output.resize(written);
                 REQUIRE(output == "White wins. - with two pairs: King over 8");
+            }
+        }
+
+        WHEN("the cards are \"Black: 3H AD KS AC KD  White: 2C AH KC AC KH\"") {
+            THEN("the output is \"Black wins. - with pair: 3\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "3H AD KS AC KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C AH KC AC KH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with high card: 3");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H AD KS AC KD  White: 2C AH KC AC KH\"") {
+            THEN("the output is \"Tie.\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H AD KS AC KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C AH KC AC KH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Tie.");
             }
         }
     }
