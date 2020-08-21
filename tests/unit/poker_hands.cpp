@@ -64,3 +64,28 @@ SCENARIO("Pair: 2 of the 5 cards in the hand have the same value. Hands which bo
     }
 }
 
+SCENARIO("Two Pairs: The hand contains 2 different pairs. Hands which both contain 2 pairs are ranked by the value of their highest pair. Hands with the same highest pair are ranked by the value of their other pair. If these values are the same the hands are ranked by the value of the remaining card.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with two pair") {
+        WHEN("the cards are \"Black: 2H 9D KS 9C KD  White: 2C KH AC KC AH\"") {
+            THEN("the output is \"White wins. - with two pairs: Ace over King\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 9D KS 9C KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C KH AC KC AH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with two pairs: Ace over King");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3D KS AC KD  White: 2C 8H KC 8C KH\"") {
+            THEN("the output is \"White wins. - with two pairs: King over 8\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D KS AC KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 8H KC 8C KH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with two pairs: King over 8");
+            }
+        }
+    }
+}
+
