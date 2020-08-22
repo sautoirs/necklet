@@ -59,6 +59,7 @@ enum PokerHandType {
     HIGH_CARD,
     PAIR,
     TWO_PAIRS,
+    THREE_OF_A_KIND,
     HIGHEST_HAND,
 };
 
@@ -83,6 +84,9 @@ struct PokerHand {
             struct Card firstCard;
             struct Card secondCard;
         } TwoPairs;
+        struct {
+            struct Card card;
+        } ThreeOfAKind;
     } value;
 };
 
@@ -124,6 +128,12 @@ static void TwoPairs_FromCardsLowerThan(struct PokerHand *self, const struct Car
 static int TwoPairs_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType TwoPairs_GetType(const struct PokerHand *self);
 static void TwoPairs_ToString(const struct PokerHand *self, char *output);
+static void ThreeOfAKind_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static const struct Card *ThreeOfAKind_GetHighestThreeOfAKind(const struct Card *cards);
+static const struct Card *ThreeOfAKind_GetHighestThreeOfAKindLowerThan(const struct Card *cards, const struct Card *limit);
+static int ThreeOfAKind_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType ThreeOfAKind_GetType(const struct PokerHand *self);
+static void ThreeOfAKind_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -371,6 +381,10 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
     CardDeck_Copy(&copy, self);
     CardDeck_Sort(&copy);
     struct PokerHand hand;
+    ThreeOfAKind_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
     TwoPairs_FromCardsLowerThan(&hand, copy.cards, limit);
     if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
@@ -649,6 +663,76 @@ static void TwoPairs_ToString(const struct PokerHand *self, char *output)
     char secondValue[16];
     Value_ToString(Card_GetValue(&self->value.TwoPairs.secondCard), secondValue);
     sprintf(output, "two pairs: %s over %s", firstValue, secondValue);
+}
+
+static void ThreeOfAKind_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &ThreeOfAKind_Compare,
+        .GetType = &ThreeOfAKind_GetType,
+        .ToString = &ThreeOfAKind_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = NULL;
+    if (sign == 0) {
+        card = ThreeOfAKind_GetHighestThreeOfAKindLowerThan(cards, &limit->value.ThreeOfAKind.card);
+    } else {
+        card = ThreeOfAKind_GetHighestThreeOfAKind(cards);
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.ThreeOfAKind.card, card);
+}
+
+static const struct Card *ThreeOfAKind_GetHighestThreeOfAKind(const struct Card *cards)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 2; i++) {
+        if (Card_Compare(&cards[i], &cards[i + 1]) == 0 && Card_Compare(&cards[i + 1], &cards[i + 2]) == 0) {
+            return &cards[i];
+        }
+    }
+    return NULL;
+}
+
+static const struct Card *ThreeOfAKind_GetHighestThreeOfAKindLowerThan(const struct Card *cards, const struct Card *limit)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 2; i++) {
+        if (Card_Compare(&cards[i], limit) >= 0) {
+            continue;
+        }
+        if (Card_Compare(&cards[i], &cards[i + 1]) == 0 && Card_Compare(&cards[i + 1], &cards[i + 2]) == 0) {
+            return &cards[i];
+        }
+    }
+    return NULL;
+}
+
+static int ThreeOfAKind_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.ThreeOfAKind.card, &other->value.ThreeOfAKind.card);
+}
+
+static enum PokerHandType ThreeOfAKind_GetType(const struct PokerHand *self)
+{
+    return THREE_OF_A_KIND;
+}
+
+static void ThreeOfAKind_ToString(const struct PokerHand *self, char *output)
+{
+    char value[16];
+    Value_ToString(Card_GetValue(&self->value.ThreeOfAKind.card), value);
+    sprintf(output, "three of a kind: %s", value);
 }
 
 static void HighestHand_Default(struct PokerHand *self)

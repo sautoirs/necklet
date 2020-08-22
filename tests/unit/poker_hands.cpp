@@ -109,3 +109,28 @@ SCENARIO("Two Pairs: The hand contains 2 different pairs. Hands which both conta
     }
 }
 
+SCENARIO("Three of a Kind: Three of the cards in the hand have the same value. Hands which both contain three of a kind are ranked by the value of the 3 cards.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a three of a kind") {
+        WHEN("the cards are \"Black: 2H 9D KS KC KD  White: 2C KH AC AC AH\"") {
+            THEN("the output is \"White wins. - with three of a kind: Ace\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 9D KS KC KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C KH AC AC AH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with three of a kind: Ace");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 9D KS KC KD  White: 2C KH KC AC AH\"") {
+            THEN("the output is \"White wins. - with three of a kind: Ace\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 9D KS KC KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C KH KC AC AH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with three of a kind: King");
+            }
+        }
+    }
+}
+
