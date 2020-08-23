@@ -204,3 +204,38 @@ SCENARIO("Flush: Hand contains 5 cards of the same suit. Hands which are both fl
     }
 }
 
+SCENARIO("Full House: 3 cards of the same value, with the remaining 2 cards forming a pair. Ranked by the value of the 3 cards.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a full house") {
+        WHEN("the cards are \"Black: 2H 2D 2S 7H 7H  White: 3S 3H 3S 7S 7S\"") {
+            THEN("the output is \"White wins. - with full house: 3 over 7\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 2D 2S 7H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 3S 3S 7S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with full house: 3 over 7");
+            }
+        }
+
+        WHEN("the cards are \"Black: 3H 3D 3S 8H 8H  White: 3S 3H 3S 7S 7S\"") {
+            THEN("the output is \"Black wins. - with full house: 8 over 3\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "3H 3D 3S 8H 8H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 3S 3S 7S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with full house: 3 over 8");
+            }
+        }
+
+        WHEN("the cards are \"Black: 3H 3D 7S 7D 7H  White: 3D 3S 8S 8D 8S\"") {
+            THEN("the output is \"Black wins. - with full house: 8 over 3\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "3H 3D 7S 7D 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3D 3S 8S 8D 8S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with full house: 8 over 3");
+            }
+        }
+    }
+}
+

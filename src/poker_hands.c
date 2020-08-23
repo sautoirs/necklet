@@ -63,6 +63,7 @@ enum PokerHandType {
     THREE_OF_A_KIND,
     STRAIGHT,
     FLUSH,
+    FULL_HOUSE,
     HIGHEST_HAND,
 };
 
@@ -96,6 +97,10 @@ struct PokerHand {
         struct {
             struct Card card;
         } Flush;
+        struct {
+            struct Card firstCard;
+            struct Card secondCard;
+        } FullHouse;
     } value;
 };
 
@@ -132,6 +137,7 @@ static void HighCard_ToString(const struct PokerHand *self, char *output);
 static void Pair_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
 static const struct Card *Pair_GetHighestPair(const struct Card *cards);
 static const struct Card *Pair_GetHighestPairLowerThan(const struct Card *cards, const struct Card *limit);
+static const struct Card *Pair_GetHighestPairExcept(const struct Card *cards, const struct Card *limit);
 static int Pair_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType Pair_GetType(const struct PokerHand *self);
 static void Pair_ToString(const struct PokerHand *self, char *output);
@@ -155,6 +161,11 @@ static const struct Card *Flush_GetFlush(const struct Card *cards);
 static int Flush_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType Flush_GetType(const struct PokerHand *self);
 static void Flush_ToString(const struct PokerHand *self, char *output);
+static void FullHouse_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static const struct Card *FullHouse_GetFlush(const struct Card *cards);
+static int FullHouse_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType FullHouse_GetType(const struct PokerHand *self);
+static void FullHouse_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -402,6 +413,10 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
     CardDeck_Copy(&copy, self);
     CardDeck_Sort(&copy);
     struct PokerHand hand;
+    FullHouse_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
     Flush_FromCardsLowerThan(&hand, copy.cards, limit);
     if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
@@ -615,6 +630,19 @@ static const struct Card *Pair_GetHighestPairLowerThan(const struct Card *cards,
 {
     for (size_t i = 0; i < NUMBER_OF_CARDS - 1; i++) {
         if (Card_Compare(&cards[i], limit) >= 0) {
+            continue;
+        }
+        if (Card_Compare(&cards[i], &cards[i + 1]) == 0) {
+            return &cards[i];
+        }
+    }
+    return NULL;
+}
+
+static const struct Card *Pair_GetHighestPairExcept(const struct Card *cards, const struct Card *limit)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 1; i++) {
+        if (Card_Compare(&cards[i], limit) == 0) {
             continue;
         }
         if (Card_Compare(&cards[i], &cards[i + 1]) == 0) {
@@ -882,6 +910,65 @@ static void Flush_ToString(const struct PokerHand *self, char *output)
     char value[16];
     Value_ToString(Card_GetValue(&self->value.Flush.card), value);
     sprintf(output, "flush: %s", value);
+}
+
+static void FullHouse_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &FullHouse_Compare,
+        .GetType = &FullHouse_GetType,
+        .ToString = &FullHouse_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = NULL;
+    if (sign == 0) {
+        card = ThreeOfAKind_GetHighestThreeOfAKindLowerThan(cards, &limit->value.FullHouse.firstCard);
+    } else {
+        card = ThreeOfAKind_GetHighestThreeOfAKind(cards);
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.FullHouse.firstCard, card);
+    card = Pair_GetHighestPairExcept(cards, card);
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.FullHouse.secondCard, card);
+}
+
+static int FullHouse_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    sign = Card_Compare(&self->value.FullHouse.firstCard, &other->value.FullHouse.firstCard);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.FullHouse.secondCard, &other->value.FullHouse.secondCard);
+}
+
+static enum PokerHandType FullHouse_GetType(const struct PokerHand *self)
+{
+    return FULL_HOUSE;
+}
+
+static void FullHouse_ToString(const struct PokerHand *self, char *output)
+{
+    char firstValue[16];
+    Value_ToString(Card_GetValue(&self->value.FullHouse.firstCard), firstValue);
+    char secondValue[16];
+    Value_ToString(Card_GetValue(&self->value.FullHouse.secondCard), secondValue);
+    sprintf(output, "full house: %s over %s", firstValue, secondValue);
 }
 
 static void HighestHand_Default(struct PokerHand *self)
