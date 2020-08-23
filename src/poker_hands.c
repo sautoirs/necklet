@@ -22,6 +22,7 @@ enum Value {
     SEVEN,
     EIGHT,
     NINE,
+    TEN,
     JACK,
     QUEEN,
     KING,
@@ -105,7 +106,7 @@ struct PokerHand {
 };
 
 static void error(const char *file, const char *function, size_t line, const char *format, ...);
-static enum Value Value_FromString(const char *string);
+static enum Value Value_FromString(const char *string, size_t size);
 static void Value_ToString(enum Value self, char *output);
 static enum Suit Suit_FromString(const char *string);
 static void StringBuffer_Init(struct StringBuffer *self, char *buffer, size_t size);
@@ -119,7 +120,7 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
 static void CardDeck_Sort(struct CardDeck *self);
 static void Card_Init(struct Card *self, enum Value value, enum Suit suit);
 static void Card_Copy(struct Card *self, const struct Card *other);
-static void Card_FromString(struct Card *self, const char *string);
+static void Card_FromString(struct Card *self, const char *string, size_t size);
 static int Card_Compare(const struct Card *self, const struct Card *other);
 static bool Card_DoesFollow(const struct Card *self, const struct Card *other);
 static bool Card_SuitEquals(const struct Card *self, const struct Card *other);
@@ -214,9 +215,12 @@ static void error(const char *file, const char *function, size_t line, const cha
     exit(1);
 }
 
-static enum Value Value_FromString(const char *string)
+static enum Value Value_FromString(const char *string, size_t size)
 {
     enum Value value = TWO;
+    if (size > 1) {
+        return TEN;
+    }
     switch (string[0]) {
         case '2':
             value = TWO;
@@ -272,6 +276,7 @@ static void Value_ToString(enum Value self, char *output)
         case SEVEN:
         case EIGHT:
         case NINE:
+        case TEN:
             sprintf(output, "%d", self + 2);
             break;
         case JACK:
@@ -345,23 +350,28 @@ static size_t StringBuffer_GetWritten(const struct StringBuffer *self)
 
 static void CardDeck_Init(struct CardDeck *self, const char *deck)
 {
-    char string[3];
+    char string[4];
     struct StringBuffer buffer;
     StringBuffer_Init(&buffer, string, sizeof(string) / sizeof(string[0]));
+    size_t state = 0;
     size_t j = 0;
     for (size_t i = 0; i < strlen(deck) && j < sizeof(self->cards) / sizeof(self->cards[0]); i++) {
         if (deck[i] == ' ') {
             continue;
         }
-        switch (StringBuffer_GetWritten(&buffer)) {
+        switch (state) {
             case 0:
                 StringBuffer_Write(&buffer, "%c", deck[i]);
+                if (!(deck[i] == '1' && i < strlen(deck) - 1 && deck[i + 1] == '0')) {
+                    state += 1;
+                }
                 break;
             case 1:
                 StringBuffer_Write(&buffer, "%c", deck[i]);
-                Card_FromString(&self->cards[j], string);
+                Card_FromString(&self->cards[j], string, StringBuffer_GetWritten(&buffer));
                 j += 1;
                 StringBuffer_Init(&buffer, string, sizeof(string) / sizeof(string[0]));
+                state = 0;
                 break;
             default:
                 ERROR("Unhandled case '%c'", deck[i]);
@@ -473,10 +483,10 @@ static void Card_Copy(struct Card *self, const struct Card *other)
     self->suit = other->suit;
 }
 
-static void Card_FromString(struct Card *self, const char *string)
+static void Card_FromString(struct Card *self, const char *string, size_t size)
 {
-    self->value = Value_FromString(&string[0]);
-    self->suit = Suit_FromString(&string[1]);
+    self->value = Value_FromString(&string[0], size - 1);
+    self->suit = Suit_FromString(&string[size - 1]);
 }
 
 static int Card_Compare(const struct Card *self, const struct Card *other)

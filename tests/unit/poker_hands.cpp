@@ -26,6 +26,16 @@ SCENARIO("High Card: Hands which do not fit any higher category are ranked by th
                 REQUIRE(output == "Black wins. - with high card: 9");
             }
         }
+
+        WHEN("the cards are \"Black: 10H 3D 5S 9C KD  White: AC 3H 4S 8C 10D\"") {
+            THEN("the output is \"Black wins. - with high card: 9\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "10H 3D 5S 9C KD");
+                struct Player *white = Player_Init(PLAYER_2, "White", "AC 3H 4S 8C 10D");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with high card: Ace");
+            }
+        }
     }
 }
 
