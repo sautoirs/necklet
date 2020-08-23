@@ -1,6 +1,7 @@
 #include <necklet/poker_hands.h>
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,6 +61,7 @@ enum PokerHandType {
     PAIR,
     TWO_PAIRS,
     THREE_OF_A_KIND,
+    STRAIGHT,
     HIGHEST_HAND,
 };
 
@@ -87,6 +89,9 @@ struct PokerHand {
         struct {
             struct Card card;
         } ThreeOfAKind;
+        struct {
+            struct Card card;
+        } Straight;
     } value;
 };
 
@@ -107,6 +112,7 @@ static void Card_Init(struct Card *self, enum Value value, enum Suit suit);
 static void Card_Copy(struct Card *self, const struct Card *other);
 static void Card_FromString(struct Card *self, const char *string);
 static int Card_Compare(const struct Card *self, const struct Card *other);
+static bool Card_DoesFollow(const struct Card *self, const struct Card *other);
 static enum Value Card_GetValue(const struct Card *self);
 static enum Suit Card_GetSuit(const struct Card *self);
 static int PokerHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
@@ -134,6 +140,11 @@ static const struct Card *ThreeOfAKind_GetHighestThreeOfAKindLowerThan(const str
 static int ThreeOfAKind_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType ThreeOfAKind_GetType(const struct PokerHand *self);
 static void ThreeOfAKind_ToString(const struct PokerHand *self, char *output);
+static void Straight_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static const struct Card *Straight_GetStraight(const struct Card *cards);
+static int Straight_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType Straight_GetType(const struct PokerHand *self);
+static void Straight_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -381,6 +392,10 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
     CardDeck_Copy(&copy, self);
     CardDeck_Sort(&copy);
     struct PokerHand hand;
+    Straight_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
     ThreeOfAKind_FromCardsLowerThan(&hand, copy.cards, limit);
     if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
@@ -441,6 +456,11 @@ static int Card_Compare(const struct Card *self, const struct Card *other)
         return 0;
     }
     return self->value > other->value ? 1 : -1;
+}
+
+static bool Card_DoesFollow(const struct Card *self, const struct Card *other)
+{
+    return self->value - other->value == 1;
 }
 
 static enum Value Card_GetValue(const struct Card *self)
@@ -733,6 +753,61 @@ static void ThreeOfAKind_ToString(const struct PokerHand *self, char *output)
     char value[16];
     Value_ToString(Card_GetValue(&self->value.ThreeOfAKind.card), value);
     sprintf(output, "three of a kind: %s", value);
+}
+
+static void Straight_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &Straight_Compare,
+        .GetType = &Straight_GetType,
+        .ToString = &Straight_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = Straight_GetStraight(cards);
+    if (sign == 0 && Card_Compare(card, &limit->value.Straight.card) >= 0) {
+        card = NULL;
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.Straight.card, card);
+}
+
+static const struct Card *Straight_GetStraight(const struct Card *cards)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 1; i++) {
+        if (!Card_DoesFollow(&cards[i], &cards[i + 1])) {
+            return NULL;
+        }
+    }
+    return &cards[0];
+}
+
+static int Straight_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.Straight.card, &other->value.Straight.card);
+}
+
+static enum PokerHandType Straight_GetType(const struct PokerHand *self)
+{
+    return STRAIGHT;
+}
+
+static void Straight_ToString(const struct PokerHand *self, char *output)
+{
+    char value[16];
+    Value_ToString(Card_GetValue(&self->value.Straight.card), value);
+    sprintf(output, "straight: %s", value);
 }
 
 static void HighestHand_Default(struct PokerHand *self)

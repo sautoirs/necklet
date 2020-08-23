@@ -134,3 +134,38 @@ SCENARIO("Three of a Kind: Three of the cards in the hand have the same value. H
     }
 }
 
+SCENARIO("Straight: Hand contains 5 cards with consecutive values. Hands which both contain a straight are ranked by their highest card.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a straight") {
+        WHEN("the cards are \"Black: 2H 3D 4S 5C 6D  White: 3C 4H 5C 6C 7H\"") {
+            THEN("the output is \"White wins. - with straight: 7\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D 4S 5C 6D");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3C 4H 5C 6C 7H");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with straight: 7");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3D 4S 5C 6D  White: 2C 3H 4C 5C 6H\"") {
+            THEN("the output is \"Tie.\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D 4S 5C 6D");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H 4C 5C 6H");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Tie.");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3D 4S 5C 6D  White: 2C 3H KC KC KH\"") {
+            THEN("the output is \"Tie.\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3D 4S 5C 6D");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2C 3H KC KC KH");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with straight: 6");
+            }
+        }
+    }
+}
+
