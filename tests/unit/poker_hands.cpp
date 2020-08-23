@@ -169,3 +169,38 @@ SCENARIO("Straight: Hand contains 5 cards with consecutive values. Hands which b
     }
 }
 
+SCENARIO("Flush: Hand contains 5 cards of the same suit. Hands which are both flushes are ranked using the rules for High Card.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a flush") {
+        WHEN("the cards are \"Black: 2H 3H 4H 5H 7H  White: 3S 4S 5S 8S 7S\"") {
+            THEN("the output is \"White wins. - with flush: 8\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3H 4H 5H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 4S 5S 8S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with flush: 8");
+            }
+        }
+
+        WHEN("the cards are \"Black: 8H 4H 5D 6H 7H  White: 2S 4S 5S 6S 7S\"") {
+            THEN("the output is \"White wins. - with flush: 7\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "8H 4H 5D 6H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "2S 4S 5S 6S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with flush: 7");
+            }
+        }
+
+        WHEN("the cards are \"Black: 8H 4H 5H 6H 7H  White: 8S 4S 5S 6S 7S\"") {
+            THEN("the output is \"White wins. - with flush: 7\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "8H 4H 5H 6H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "8S 4S 5S 6S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Tie.");
+            }
+        }
+    }
+}
+

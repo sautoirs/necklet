@@ -62,6 +62,7 @@ enum PokerHandType {
     TWO_PAIRS,
     THREE_OF_A_KIND,
     STRAIGHT,
+    FLUSH,
     HIGHEST_HAND,
 };
 
@@ -92,6 +93,9 @@ struct PokerHand {
         struct {
             struct Card card;
         } Straight;
+        struct {
+            struct Card card;
+        } Flush;
     } value;
 };
 
@@ -113,6 +117,7 @@ static void Card_Copy(struct Card *self, const struct Card *other);
 static void Card_FromString(struct Card *self, const char *string);
 static int Card_Compare(const struct Card *self, const struct Card *other);
 static bool Card_DoesFollow(const struct Card *self, const struct Card *other);
+static bool Card_SuitEquals(const struct Card *self, const struct Card *other);
 static enum Value Card_GetValue(const struct Card *self);
 static enum Suit Card_GetSuit(const struct Card *self);
 static int PokerHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
@@ -145,6 +150,11 @@ static const struct Card *Straight_GetStraight(const struct Card *cards);
 static int Straight_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType Straight_GetType(const struct PokerHand *self);
 static void Straight_ToString(const struct PokerHand *self, char *output);
+static void Flush_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static const struct Card *Flush_GetFlush(const struct Card *cards);
+static int Flush_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType Flush_GetType(const struct PokerHand *self);
+static void Flush_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -392,6 +402,10 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
     CardDeck_Copy(&copy, self);
     CardDeck_Sort(&copy);
     struct PokerHand hand;
+    Flush_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
     Straight_FromCardsLowerThan(&hand, copy.cards, limit);
     if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
@@ -461,6 +475,11 @@ static int Card_Compare(const struct Card *self, const struct Card *other)
 static bool Card_DoesFollow(const struct Card *self, const struct Card *other)
 {
     return self->value - other->value == 1;
+}
+
+static bool Card_SuitEquals(const struct Card *self, const struct Card *other)
+{
+    return self->suit == other->suit;
 }
 
 static enum Value Card_GetValue(const struct Card *self)
@@ -808,6 +827,61 @@ static void Straight_ToString(const struct PokerHand *self, char *output)
     char value[16];
     Value_ToString(Card_GetValue(&self->value.Straight.card), value);
     sprintf(output, "straight: %s", value);
+}
+
+static void Flush_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &Flush_Compare,
+        .GetType = &Flush_GetType,
+        .ToString = &Flush_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = Flush_GetFlush(cards);
+    if (sign == 0 && Card_Compare(card, &limit->value.Flush.card) >= 0) {
+        card = NULL;
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.Flush.card, card);
+}
+
+static const struct Card *Flush_GetFlush(const struct Card *cards)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 1; i++) {
+        if (!Card_SuitEquals(&cards[i], &cards[i + 1])) {
+            return NULL;
+        }
+    }
+    return &cards[0];
+}
+
+static int Flush_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.Flush.card, &other->value.Flush.card);
+}
+
+static enum PokerHandType Flush_GetType(const struct PokerHand *self)
+{
+    return FLUSH;
+}
+
+static void Flush_ToString(const struct PokerHand *self, char *output)
+{
+    char value[16];
+    Value_ToString(Card_GetValue(&self->value.Flush.card), value);
+    sprintf(output, "flush: %s", value);
 }
 
 static void HighestHand_Default(struct PokerHand *self)
