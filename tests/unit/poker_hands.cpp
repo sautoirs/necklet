@@ -249,3 +249,28 @@ SCENARIO("Full House: 3 cards of the same value, with the remaining 2 cards form
     }
 }
 
+SCENARIO("Four of a kind: 4 cards with the same value. Ranked by the value of the 4 cards.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a four of a kind") {
+        WHEN("the cards are \"Black: 2H 2D 2S 2H 7H  White: 3S 3H 3S 3S 7S\"") {
+            THEN("the output is \"White wins. - with four of a kind: 3\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 2D 2S 2H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 3S 3S 3S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with four of a kind: 3");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 2D 2S 2H 7H  White: 3S 3H 3S 7S 7S\"") {
+            THEN("the output is \"Black wins. - with four of a kind: 2\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 2D 2S 2H 7H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 3H 3S 7S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with four of a kind: 2");
+            }
+        }
+    }
+}
+

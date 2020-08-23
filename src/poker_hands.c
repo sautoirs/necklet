@@ -65,6 +65,7 @@ enum PokerHandType {
     STRAIGHT,
     FLUSH,
     FULL_HOUSE,
+    FOUR_OF_A_KIND,
     HIGHEST_HAND,
 };
 
@@ -102,6 +103,9 @@ struct PokerHand {
             struct Card firstCard;
             struct Card secondCard;
         } FullHouse;
+        struct {
+            struct Card card;
+        } FourOfAKind;
     } value;
 };
 
@@ -163,10 +167,14 @@ static int Flush_Compare(const struct PokerHand *self, const struct PokerHand *o
 static enum PokerHandType Flush_GetType(const struct PokerHand *self);
 static void Flush_ToString(const struct PokerHand *self, char *output);
 static void FullHouse_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
-static const struct Card *FullHouse_GetFlush(const struct Card *cards);
 static int FullHouse_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType FullHouse_GetType(const struct PokerHand *self);
 static void FullHouse_ToString(const struct PokerHand *self, char *output);
+static void FourOfAKind_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit);
+static const struct Card *FourOfAKind_GetFourOfAKind(const struct Card *cards);
+static int FourOfAKind_Compare(const struct PokerHand *self, const struct PokerHand *other);
+static enum PokerHandType FourOfAKind_GetType(const struct PokerHand *self);
+static void FourOfAKind_ToString(const struct PokerHand *self, char *output);
 static void HighestHand_Default(struct PokerHand *self);
 static int HighestHand_Compare(const struct PokerHand *self, const struct PokerHand *other);
 static enum PokerHandType HighestHand_GetType(const struct PokerHand *self);
@@ -423,6 +431,10 @@ static struct PokerHand CardDeck_GetHighestPokerHandLowerThan(const struct CardD
     CardDeck_Copy(&copy, self);
     CardDeck_Sort(&copy);
     struct PokerHand hand;
+    FourOfAKind_FromCardsLowerThan(&hand, copy.cards, limit);
+    if (hand.vtable->GetType(&hand) != NO_HAND) {
+        return hand;
+    }
     FullHouse_FromCardsLowerThan(&hand, copy.cards, limit);
     if (hand.vtable->GetType(&hand) != NO_HAND) {
         return hand;
@@ -979,6 +991,61 @@ static void FullHouse_ToString(const struct PokerHand *self, char *output)
     char secondValue[16];
     Value_ToString(Card_GetValue(&self->value.FullHouse.secondCard), secondValue);
     sprintf(output, "full house: %s over %s", firstValue, secondValue);
+}
+
+static void FourOfAKind_FromCardsLowerThan(struct PokerHand *self, const struct Card *cards, const struct PokerHand *limit)
+{
+    static const struct PokerHandMethods vtable = {
+        .Compare = &FourOfAKind_Compare,
+        .GetType = &FourOfAKind_GetType,
+        .ToString = &FourOfAKind_ToString,
+    };
+    self->vtable = &vtable;
+    int sign = PokerHand_Compare(self, limit);
+    if (sign > 0) {
+        NoHand_Default(self);
+        return;
+    }
+    const struct Card *card = FourOfAKind_GetFourOfAKind(cards);
+    if (sign == 0 && Card_Compare(card, &limit->value.FourOfAKind.card) >= 0) {
+        card = NULL;
+    }
+    if (card == NULL) {
+        NoHand_Default(self);
+        return;
+    }
+    Card_Copy(&self->value.FourOfAKind.card, card);
+}
+
+static const struct Card *FourOfAKind_GetFourOfAKind(const struct Card *cards)
+{
+    for (size_t i = 0; i < NUMBER_OF_CARDS - 3; i++) {
+        if (Card_Compare(&cards[i], &cards[i + 1]) == 0 && Card_Compare(&cards[i], &cards[i + 2]) == 0 && Card_Compare(&cards[i], &cards[i + 3]) == 0) {
+            return &cards[i];
+        }
+    }
+    return NULL;
+}
+
+static int FourOfAKind_Compare(const struct PokerHand *self, const struct PokerHand *other)
+{
+    int sign = PokerHand_Compare(self, other);
+    if (sign != 0) {
+        return sign;
+    }
+    return Card_Compare(&self->value.FourOfAKind.card, &other->value.FourOfAKind.card);
+}
+
+static enum PokerHandType FourOfAKind_GetType(const struct PokerHand *self)
+{
+    return FOUR_OF_A_KIND;
+}
+
+static void FourOfAKind_ToString(const struct PokerHand *self, char *output)
+{
+    char value[16];
+    Value_ToString(Card_GetValue(&self->value.FourOfAKind.card), value);
+    sprintf(output, "four of a kind: %s", value);
 }
 
 static void HighestHand_Default(struct PokerHand *self)
