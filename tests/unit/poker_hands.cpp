@@ -274,3 +274,28 @@ SCENARIO("Four of a kind: 4 cards with the same value. Ranked by the value of th
     }
 }
 
+SCENARIO("Straight flush: 5 cards of the same suit with consecutive values. Ranked by the highest card in the hand.", "[poker_hands]") {
+    std::string output = std::string(128, 'a');
+    GIVEN("Two poker hands with a straight flush") {
+        WHEN("the cards are \"Black: 2H 3H 4H 5H 6H  White: 3S 4S 5S 6S 7S\"") {
+            THEN("the output is \"White wins. - with straight flush: 7\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3H 4H 5H 6H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "3S 4S 5S 6S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "White wins. - with straight flush: 7");
+            }
+        }
+
+        WHEN("the cards are \"Black: 2H 3H 4H 5H 6H  White: 9S 9H 9S 9S 7S\"") {
+            THEN("the output is \"Black wins. - with straight flush: 6\"") {
+                struct Player *black = Player_Init(PLAYER_1, "Black", "2H 3H 4H 5H 6H");
+                struct Player *white = Player_Init(PLAYER_2, "White", "9S 9H 9S 9S 7S");
+                size_t written = Player_PrettyCompare(black, white, &output[0], output.size());
+                output.resize(written);
+                REQUIRE(output == "Black wins. - with straight flush: 6");
+            }
+        }
+    }
+}
+
